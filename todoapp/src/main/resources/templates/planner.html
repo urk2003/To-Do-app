@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner - TODO App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar-brand, .navbar-nav .nav-link {
+            color: white !important;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #f8f9fa !important;
+        }
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .planner-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .planner-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .planner-header h2 {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .planner-header p {
+            color: #666;
+            margin: 0;
+        }
+        .date-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .date-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #e9ecef;
+            color: inherit;
+            text-decoration: none;
+        }
+        .date-card.today {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+        .date-card.past {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+            opacity: 0.8;
+        }
+        .date-card.future {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+        .date-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .date-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+        .date-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-today {
+            background: #28a745;
+            color: white;
+        }
+        .badge-past {
+            background: #6c757d;
+            color: white;
+        }
+        .badge-future {
+            background: #ffc107;
+            color: #000;
+        }
+        .task-preview {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        .task-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .stat-pending {
+            color: #ffc107;
+        }
+        .stat-completed {
+            color: #28a745;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .quick-action {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+        .quick-action:hover {
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            color: #666;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .filter-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .filter-tab:hover {
+            background: #f8f9fa;
+        }
+        .filter-tab.active:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">📝 TODO App</a>
+        <div class="navbar-nav ms-auto">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Today</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/planner}">Planner</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/calendar}">Calendar</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="planner-container">
+        <div class="planner-header">
+            <h2>📋 Task Planner</h2>
+            <p>Overview of all your scheduled tasks</p>
+        </div>
+
+        <div class="quick-actions">
+            <a href="/" class="quick-action">📅 Today's Tasks</a>
+            <a href="/calendar" class="quick-action">🗓️ Calendar View</a>
+            <a href="/?date=" class="quick-action" th:href="@{/(date=${T(java.time.LocalDate).now()})}">➕ Add Task</a>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterTasks('all')">All Dates</button>
+            <button class="filter-tab" onclick="filterTasks('past')">Past</button>
+            <button class="filter-tab" onclick="filterTasks('today')">Today</button>
+            <button class="filter-tab" onclick="filterTasks('future')">Future</button>
+        </div>
+
+        <div th:if="${#lists.isEmpty(taskDates)}" class="empty-state">
+            <div class="mb-3">📋</div>
+            <h5>No tasks scheduled yet</h5>
+            <p>Start by adding your first task!</p>
+            <a href="/" class="quick-action">Add Your First Task</a>
+        </div>
+
+        <div th:each="date : ${taskDates}" class="date-card-wrapper">
+            <a th:href="@{/(date=${date})}" class="date-card"
+               th:with="
+                    today=${T(java.time.LocalDate).now()},
+                    isToday=${date.equals(today)},
+                    isPast=${date.isBefore(today)},
+                    isFuture=${date.isAfter(today)}
+               "
+               th:classappend="${isToday ? 'today' : (isPast ? 'past' : 'future')}"
+               th:data-filter="${isToday ? 'today' : (isPast ? 'past' : 'future')}">
+
+                <div class="date-header">
+                    <h5 class="date-title" th:text="${#temporals.format(date, 'EEEE, MMMM d, yyyy')}"></h5>
+                    <span class="date-badge"
+                          th:classappend="${isToday ? 'badge-today' : (isPast ? 'badge-past' : 'badge-future')}">
+                        <span th:if="${isToday}">Today</span>
+                        <span th:if="${isPast}">Past</span>
+                        <span th:if="${isFuture}">Upcoming</span>
+                    </span>
+                </div>
+
+                <div class="task-preview">
+                    <span th:if="${isToday}">📅</span>
+                    <span th:if="${isPast}">📋</span>
+                    <span th:if="${isFuture}">⏰</span>
+                    Click to view and manage tasks for this date
+                </div>
+
+                <div class="task-stats">
+                    <div class="stat-item">
+                        <span>📍</span>
+                        <span th:text="${#temporals.format(date, 'd MMM yyyy')}"></span>
+                    </div>
+                    <div class="stat-item stat-pending">
+                        <span>⏳</span>
+                        <span>View Tasks</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function filterTasks(filter) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Filter date cards
+        const dateCards = document.querySelectorAll('.date-card-wrapper');
+        dateCards.forEach(card => {
+            const dateCardElement = card.querySelector('.date-card');
+            const cardFilter = dateCardElement.getAttribute('data-filter');
+
+            if (filter === 'all' || cardFilter === filter) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Add smooth scrolling and animations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add fade-in animation to date cards
+        const dateCards = document.querySelectorAll('.date-card');
+        dateCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+</body>
+</html>

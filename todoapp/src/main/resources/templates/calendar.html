@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar - TODO App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar-brand, .navbar-nav .nav-link {
+            color: white !important;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #f8f9fa !important;
+        }
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .calendar-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 1rem;
+        }
+        .calendar-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 1px;
+        }
+        .calendar-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+        }
+        .calendar-table td {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            vertical-align: top;
+            height: 120px;
+            width: 14.28%;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .calendar-table td:hover {
+            background: #e9ecef;
+            transform: scale(1.02);
+        }
+        .calendar-day {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50%;
+            display: inline-block;
+            min-width: 2rem;
+            text-align: center;
+        }
+        .calendar-day.other-month {
+            color: #adb5bd;
+        }
+        .task-indicator {
+            background: #28a745;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 10px;
+            margin-bottom: 0.2rem;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .task-indicator.completed {
+            background: #6c757d;
+            text-decoration: line-through;
+        }
+        .task-count {
+            background: #ffc107;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 10px;
+            margin-top: 0.2rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .btn-outline-primary:hover {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        .calendar-legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">📝 TODO App</a>
+        <div class="navbar-nav ms-auto">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Today</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/planner}">Planner</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/calendar}">Calendar</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h2 class="mb-0">📅 <span th:text="${#temporals.format(currentMonth, 'MMMM yyyy')}"></span></h2>
+            <div class="calendar-nav">
+                <a th:href="@{/calendar(year=${currentMonth.year}, month=${currentMonth.minusMonths(1).monthValue})}"
+                   class="btn btn-outline-primary">← Previous</a>
+                <a th:href="@{/calendar}" class="btn btn-primary">Today</a>
+                <a th:href="@{/calendar(year=${currentMonth.year}, month=${currentMonth.plusMonths(1).monthValue})}"
+                   class="btn btn-outline-primary">Next →</a>
+            </div>
+        </div>
+
+        <table class="calendar-table">
+            <thead>
+            <tr>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="week : ${#numbers.sequence(0, 5)}">
+                <td th:each="day : ${#numbers.sequence(0, 6)}">
+                    <div th:with="
+                                currentDate=${currentMonth.atDay(1).minusDays(currentMonth.atDay(1).dayOfWeek.value % 7).plusDays(week * 7 + day)},
+                                isCurrentMonth=${currentDate.month == currentMonth.month},
+                                isToday=${currentDate.equals(T(java.time.LocalDate).now())},
+                                dayTasks=${tasksByDate[currentDate]}
+                            ">
+                        <div class="calendar-day"
+                             th:classappend="${isToday ? 'today' : ''} + ${!isCurrentMonth ? ' other-month' : ''}"
+                             th:text="${currentDate.dayOfMonth}">
+                        </div>
+
+                        <div th:if="${dayTasks != null and !dayTasks.isEmpty()}">
+                            <div th:each="task, iterStat : ${dayTasks}" th:if="${iterStat.index < 3}">
+                                        <span class="task-indicator"
+                                              th:classappend="${task.completed ? 'completed' : ''}"
+                                              th:text="${task.title}"
+                                              th:title="${task.title}"
+                                              th:onclick="'window.location.href=\'/\?date=' + ${currentDate} + '\''"
+                                              style="cursor: pointer;">
+                                        </span>
+                            </div>
+                            <div th:if="${dayTasks.size() > 3}" class="task-count">
+                                +<span th:text="${dayTasks.size() - 3}"></span> more
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <small>Pending Tasks</small>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #6c757d;"></div>
+                <small>Completed Tasks</small>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffc107;"></div>
+                <small>More Tasks</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
